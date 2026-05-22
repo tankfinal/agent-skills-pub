@@ -1,0 +1,15 @@
+{
+  "name": "tankfinal-agent-skills-pub",
+  "owner": {
+    "name": "Tank Yang",
+    "email": "aaa2003.loveyou@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "toolkit-pub",
+      "source": "./plugins/toolkit-pub",
+      "version": "1.0.0",
+      "description": "Shareable Claude Code skills collection. Currently ships: nueip (NUEiP attendance/leave one-stop query). More skills coming."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "toolkit-pub",
+  "version": "1.0.0",
+  "description": "Shareable Claude Code skills collection. Currently ships: nueip (NUEiP attendance/leave one-stop query). More skills coming.",
+  "author": {
+    "name": "Tank Yang"
+  }
+}
