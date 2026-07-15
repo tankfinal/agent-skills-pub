@@ -1,6 +1,6 @@
 ---
 name: nueip
-version: 1.0.0
+version: 1.1.0
 description: |
   NUEiP 一鍵查詢：今日打卡 / 本週 / 過去 30 天 / 部門請假 / 我的待簽 / 假期餘額 / 三合一晨報。
   單一入口 `/toolkit-pub:nueip <sub>`，省去記 MCP 工具名。
@@ -26,6 +26,7 @@ user-invocable: true
 | `balance` | 假期餘額、餘額、特休、假期 | 我的假期餘額 | `my_leave_balance` |
 | `me` | 我是誰、帳號、我的帳號、whoami | NUEiP 帳號資訊 | `whoami` |
 | `team` | 部門請假、誰請假、誰沒來、who-out、leaves、請假、部門 | 部門今日已通過請假（🔒 主管） | `team_leaves(today, dept, passed)` |
+| `team-attend` | 部門出勤、成員出勤、出勤記錄、出勤稽核、本月出勤、monthly-attend | 部門一段期間出勤稽核，套用彈性工時算法（🔒 主管） | `team_attendance` |
 | `pending` | 待簽、待簽核、待我簽、to-sign、approvals、簽核 | 我待簽核的所有單（🔒 主管） | `pending_approvals(各 type)` |
 | `brief` | 晨報、早報、早會、morning | 今日打卡 + 待簽 + 今日請假 + 本月異常（部分 🔒）| 多項合一 |
 
@@ -95,6 +96,77 @@ end = <今日>
 ### `me`（我是誰、帳號）
 
 呼叫 `mcp__nueip__whoami()`，輸出 u_sn、員編、姓名、部門、職稱。
+
+### `team-attend`（部門出勤稽核）🔒 主管
+
+呼叫 `mcp__nueip__team_attendance(start_date, end_date, scope="dept")`。
+
+**日期參數解析**（從 argument 取）：
+- argument 含兩個 `YYYY-MM-DD` → 直接使用
+- argument 含一個 `YYYY-MM-DD` → 當作 start_date，end_date = 今日
+- 無日期 → start_date = 本月 01 日（`date -v1d +%Y-%m-%d`），end_date = 今日
+
+**⚠️ 計算口徑：不使用 NUEiP 的 `late` / `late_min` / `leave_early` / `leave_early_min` 欄位**，改用 on_punch / off_punch 套用下方彈性工時公式自行計算。
+
+#### 彈性工時計算規則
+
+```
+FLEX_LATE_THRESHOLD = 10:00   # on_punch 超過此時才算遲到
+LUNCH_START         = 13:00   # 午休開始
+LUNCH_END           = 14:00   # 午休結束（固定 1h 不計入工時）
+REQUIRED_WORK_MIN   = 480     # 每日須滿工時（分鐘）
+
+遲到分鐘：
+  if on_punch > FLEX_LATE_THRESHOLD:
+    late_min = minutes(on_punch) - minutes(FLEX_LATE_THRESHOLD)
+  else:
+    late_min = 0
+
+午休重疊（分鐘）：
+  lunch = max(0, min(minutes(off_punch), 840) - max(minutes(on_punch), 780))
+
+實際工時（分鐘）：
+  work = (minutes(off_punch) - minutes(on_punch)) - lunch
+
+早退分鐘：
+  if work < REQUIRED_WORK_MIN:
+    early_min = REQUIRED_WORK_MIN - work
+  else:
+    early_min = 0
+```
+
+#### 每筆記錄分類
+
+| 條件 | 分類 |
+|------|------|
+| `off_day = true` | 週末 / 例假，**跳過不列** |
+| `on_punch = null AND has_leave = true` | 請假（全天） |
+| `on_punch = null AND has_leave = false` | 缺卡（無假單）⚠️ |
+| `on_punch ≠ null AND has_leave = true` | 半天假＋出勤（仍套用工時公式） |
+| `on_punch ≠ null AND has_leave = false` | 正常出勤（計算 late_min / early_min） |
+
+#### 輸出格式
+
+```
+部門出勤稽核 YYYY-MM-DD ～ YYYY-MM-DD（工作日 N 天）
+
+摘要：
+| 成員 | 到勤 | 請假 | 缺卡 | 遲到(次/合計分) | 早退(次/合計分) |
+|------|------|------|------|-----------------|-----------------|
+| <成員 A> | N | N | N | N / Nm | N / Nm |
+...
+
+缺卡明細（需確認補假單）：
+<日期>：<成員> / <成員> / ...
+
+遲到明細：
+<日期> <成員>：上班 HH:MM（遲 Nm）
+
+早退明細：
+<日期> <成員>：下班 HH:MM（早 Nm，工時 Xh Ym）
+```
+
+異常為 0 時省略對應明細段落。
 
 ### `team`（部門請假、誰沒來）🔒 主管
 

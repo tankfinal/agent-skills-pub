@@ -4,7 +4,7 @@
 陸續收錄更多 skills；目前公開的第一個是 `nueip`（NUEiP 一鍵查出勤 / 請假
 / 待簽 / 假期餘額）。
 
-**Current version:** `toolkit-pub@1.0.0`
+**Current version:** `toolkit-pub@1.1.0`
 
 ---
 

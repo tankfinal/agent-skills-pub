@@ -8,8 +8,8 @@
     {
       "name": "toolkit-pub",
       "source": "./plugins/toolkit-pub",
-      "version": "1.0.0",
-      "description": "Shareable Claude Code skills collection. Currently ships: nueip (NUEiP attendance/leave one-stop query). More skills coming."
+      "version": "1.1.0",
+      "description": "Shareable Claude Code skills collection. Currently ships: nueip (NUEiP attendance/leave one-stop query, incl. team attendance audit with flex-hours calculation). More skills coming."
     }
   ]
 }
