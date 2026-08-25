@@ -11,10 +11,18 @@ Use placeholders like `<your-company-code>`, `<成員 A>` in examples.
 - `plugins/toolkit-pub/skills/nueip/SKILL.md` → frontmatter `version:`
 - `README.md` → `**Current version:**` line
 
-## Companion repo
+## Upstream dependency
 
-`nueip` skill calls `mcp__nueip__*` tools from [`nueip-mcp`](https://github.com/tankfinal/nueip-mcp)
-(local: `~/CursorProjects/nueip-mcp`). Tool-shape changes must bump both repos.
+`nueip` skill calls `mcp__claude_ai_NUEIP__*` tools from NUEiP's **official remote
+MCP** (`https://mcp.nueip.com/mcp`), connected via OAuth. No local server, no
+credential handling in this repo. The tool surface is controlled by NUEiP — when
+it changes, update `SKILL.md` and bump; there is no companion repo to sync.
+
+Notable gaps vs. a local wrapper (documented in SKILL.md, don't "fix" by guessing):
+- no `whoami` — derive own hashid from an unfiltered `get_attendance_records`
+- no leave-balance aggregation — returns one row per grant period, skill aggregates
+- no team-leave range query — `list_subordinate_leaves_today` is single-date only
+- no approval `badges` / status filter on team leaves — count from `items` instead
 
 ## Release workflow
 
